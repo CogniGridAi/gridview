@@ -4,7 +4,19 @@ GridView is an extension platform built on top of Apache Superset, providing enh
 
 ## 🚀 Quick Start
 
-### Option 1: One-Click Setup (Recommended)
+### Option 1: Docker (Recommended for Production)
+```bash
+# Simple single-container deployment
+./scripts/docker-simple.sh
+
+# OR development environment with hot reload
+./scripts/docker-dev.sh
+
+# OR full production stack (PostgreSQL + Redis + Celery)
+./scripts/docker-prod.sh
+```
+
+### Option 2: Local Development (Native)
 ```bash
 # Check if your system meets requirements
 ./scripts/check_requirements.sh
@@ -13,7 +25,7 @@ GridView is an extension platform built on top of Apache Superset, providing enh
 ./scripts/setup_and_run.sh
 ```
 
-### Option 2: Manual Setup
+### Option 3: Manual Setup (Advanced)
 ```bash
 # Check requirements first
 ./scripts/check_requirements.sh
@@ -31,14 +43,24 @@ cd superset && pip install -e . && pip install -r requirements/base.txt && cd ..
 python -m gridview.cli run --port 5001
 ```
 
-Then visit `http://localhost:5001` and login with `admin/admin`.
+**Access GridView:**
+- **Docker**: `http://localhost:8088`  
+- **Local**: `http://localhost:5001`
+- **Login**: `admin/admin`
 
 ## 📋 Requirements
 
+### Local Development
 - **Python 3.10+** (3.11 recommended)
 - **Node.js 18+** and npm
 - **Git**
 - **8GB+ RAM** (for Superset frontend compilation)
+
+### Docker Deployment (Recommended)
+- **Docker 20.10+**
+- **Docker Compose 2.0+**
+- **4GB+ RAM** (for containers)
+- **10GB+ Disk** (for images and data)
 
 ### System Dependencies
 
@@ -119,6 +141,188 @@ python -m gridview.cli run --port 5001
 - **URL**: `http://localhost:5001`
 - **Username**: `admin`
 - **Password**: `admin`
+
+## 🐳 Docker Deployment
+
+GridView provides multiple Docker deployment options for different use cases:
+
+### Quick Start (Single Container)
+```bash
+# Build and run in one command
+./scripts/docker-simple.sh
+
+# Access at http://localhost:8088
+```
+
+### Development Environment
+```bash
+# Start development environment with debug features
+./scripts/docker-dev.sh
+
+# Features enabled:
+# • Debug mode with verbose logging
+# • CSRF disabled for easier testing
+# • Code hot-reloading (if mounted)
+# • SQLite database (persistent)
+```
+
+### Production Deployment
+```bash
+# Full production stack with PostgreSQL + Redis + Celery
+./scripts/docker-prod.sh
+
+# Includes:
+# • PostgreSQL database
+# • Redis for caching and message queuing
+# • Celery workers for background tasks
+# • Celery beat for scheduled tasks
+# • Production security settings
+```
+
+### Manual Docker Commands
+
+**Build Image:**
+```bash
+./scripts/docker-build.sh [tag]
+```
+
+**Docker Compose Profiles:**
+```bash
+# Development (SQLite + single container)
+docker-compose -f docker/docker-compose.yml -f docker/docker-compose.dev.yml up
+
+# Production (PostgreSQL + Redis + Celery)
+docker-compose -f docker/docker-compose.yml -f docker/docker-compose.prod.yml --profile full up
+
+# With specific services (from docker directory)
+cd docker && docker-compose up gridview db redis
+```
+
+### Environment Configuration
+
+Create environment file for production:
+```bash
+cp docker/environment.template .env.prod
+# Edit .env.prod with your settings
+```
+
+**Key Environment Variables:**
+```bash
+# Security (REQUIRED for production)
+SUPERSET_SECRET_KEY=your-random-secret-key
+POSTGRES_PASSWORD=your-database-password
+
+# Database
+DATABASE_DIALECT=postgresql  # or sqlite
+POSTGRES_DB=superset
+POSTGRES_USER=superset
+
+# Features
+REDIS_AVAILABLE=true  # Enables caching and async tasks
+WTF_CSRF_ENABLED=true  # CSRF protection
+SESSION_COOKIE_SECURE=true  # HTTPS only
+
+# Application
+FLASK_ENV=production
+LOG_LEVEL=WARNING
+```
+
+### Docker Architecture
+
+```
+GridView Docker Stack
+├── gridview (Main application)
+├── db (PostgreSQL database)
+├── redis (Cache & message broker)
+├── celery-worker (Background tasks)
+├── celery-beat (Scheduled tasks)
+└── nginx (Reverse proxy - optional)
+```
+
+### Persistent Data
+
+Docker volumes for data persistence:
+- `gridview_data` - Application data, uploads, SQLite DB
+- `postgres_data` - PostgreSQL database files  
+- `redis_data` - Redis persistence
+- `gridview_logs` - Application logs
+
+### Container Management
+
+**View Logs:**
+```bash
+# From project root
+docker-compose -f docker/docker-compose.yml logs -f gridview
+docker-compose -f docker/docker-compose.yml logs -f db redis
+
+# Or from docker directory
+cd docker && docker-compose logs -f gridview
+```
+
+**Scale Services:**
+```bash
+# Scale Celery workers (from project root)
+docker-compose -f docker/docker-compose.yml -f docker/docker-compose.prod.yml up -d --scale celery-worker=3
+```
+
+**Database Backup:**
+```bash
+# PostgreSQL backup
+docker-compose -f docker/docker-compose.yml exec db pg_dump -U superset superset > backup.sql
+
+# SQLite backup (development)
+docker cp gridview-simple:/app/data/superset/superset.db ./backup.db
+```
+
+### Production Considerations
+
+1. **Security:**
+   - Change default passwords in `.env.prod`
+   - Enable HTTPS with SSL certificates
+   - Use Docker secrets for sensitive data
+   - Configure firewall rules
+
+2. **Performance:**
+   - Scale Celery workers based on load
+   - Configure PostgreSQL for your workload
+   - Set up Redis persistence and optimization
+   - Use external load balancer if needed
+
+3. **Monitoring:**
+   - Set up health checks and alerts
+   - Monitor container resource usage
+   - Configure log aggregation
+   - Set up backup strategies
+
+### Troubleshooting Docker
+
+**Container Won't Start:**
+```bash
+# Check logs
+docker-compose -f docker/docker-compose.yml logs gridview
+
+# Check container status  
+docker-compose -f docker/docker-compose.yml ps
+
+# Rebuild if needed
+docker-compose -f docker/docker-compose.yml build --no-cache gridview
+```
+
+**Database Connection Issues:**
+```bash
+# Check database connectivity
+docker-compose -f docker/docker-compose.yml exec gridview python -c "
+from superset import app, db
+with app.app_context():
+    print('Database connection:', db.engine.url)
+"
+```
+
+**Permission Errors:**
+```bash
+# Fix data directory permissions
+docker-compose -f docker/docker-compose.yml exec gridview chown -R gridview:gridview /app/data
+```
 
 ## 🎯 What You Should See
 

@@ -1,0 +1,162 @@
+# GridView Docker Compose Configuration
+# Provides multiple deployment options for different environments
+
+version: '3.8'
+
+services:
+  # GridView Application (Main Service)
+  gridview:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gridview-app
+    ports:
+      - "8088:8088"
+    environment:
+      # Basic configuration
+      - SUPERSET_SECRET_KEY=${SUPERSET_SECRET_KEY:-your-super-secret-key-change-this-in-production}
+      - FLASK_ENV=${FLASK_ENV:-production}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      
+      # Database configuration (SQLite by default)
+      - DATABASE_DIALECT=sqlite
+      
+      # Security settings
+      - WTF_CSRF_ENABLED=true
+      - SESSION_COOKIE_SECURE=false  # Set to true for HTTPS
+      
+      # Redis configuration (disabled by default)
+      - REDIS_AVAILABLE=false
+    volumes:
+      # Persistent data storage
+      - gridview_data:/app/data
+      - gridview_logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8088/gridview/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - gridview_network
+
+  # PostgreSQL Database (Optional - for production)
+  db:
+    image: postgres:15-alpine
+    container_name: gridview-postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-superset}
+      - POSTGRES_USER=${POSTGRES_USER:-superset}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-superset}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - gridview_network
+    profiles:
+      - postgres
+      - full
+
+  # Redis Cache & Celery Broker (Optional - for production)
+  redis:
+    image: redis:7-alpine
+    container_name: gridview-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - gridview_network
+    profiles:
+      - redis
+      - full
+
+  # Celery Worker (Optional - for async tasks)
+  celery-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gridview-celery-worker
+    command: celery --app=superset.tasks.celery_app:app worker --loglevel=info
+    environment:
+      - SUPERSET_SECRET_KEY=${SUPERSET_SECRET_KEY:-your-super-secret-key-change-this-in-production}
+      - DATABASE_DIALECT=postgresql
+      - DATABASE_HOST=db
+      - DATABASE_USER=${POSTGRES_USER:-superset}
+      - DATABASE_PASSWORD=${POSTGRES_PASSWORD:-superset}
+      - DATABASE_DB=${POSTGRES_DB:-superset}
+      - REDIS_AVAILABLE=true
+      - REDIS_HOST=redis
+    volumes:
+      - gridview_data:/app/data
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+    networks:
+      - gridview_network
+    profiles:
+      - full
+
+  # Celery Beat Scheduler (Optional - for scheduled tasks)
+  celery-beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gridview-celery-beat
+    command: celery --app=superset.tasks.celery_app:app beat --loglevel=info
+    environment:
+      - SUPERSET_SECRET_KEY=${SUPERSET_SECRET_KEY:-your-super-secret-key-change-this-in-production}
+      - DATABASE_DIALECT=postgresql
+      - DATABASE_HOST=db
+      - DATABASE_USER=${POSTGRES_USER:-superset}
+      - DATABASE_PASSWORD=${POSTGRES_PASSWORD:-superset}
+      - DATABASE_DB=${POSTGRES_DB:-superset}
+      - REDIS_AVAILABLE=true
+      - REDIS_HOST=redis
+    volumes:
+      - gridview_data:/app/data
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+    networks:
+      - gridview_network
+    profiles:
+      - full
+
+  # Nginx Reverse Proxy (Optional - for production)
+  nginx:
+    image: nginx:alpine
+    container_name: gridview-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/ssl:/etc/nginx/ssl:ro  # Mount SSL certificates if available
+    depends_on:
+      - gridview
+    restart: unless-stopped
+    networks:
+      - gridview_network
+    profiles:
+      - nginx
+      - full
+
+# Named volumes for persistent data
+volumes:
+  gridview_data:
+    driver: local
+  gridview_logs:
+    driver: local
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+# Networks
+networks:
+  gridview_network:
+    driver: bridge

@@ -1,0 +1,34 @@
+# GridView Development Docker Compose Override
+# Use with: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+version: '3.8'
+
+services:
+  gridview:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production  # Use production stage but with dev settings
+    environment:
+      # Development-specific settings
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - LOG_LEVEL=DEBUG
+      - WTF_CSRF_ENABLED=false  # Disable CSRF for easier development
+      - SUPERSET_SECRET_KEY=dev-secret-key-not-for-production
+    volumes:
+      # Mount source code for development (optional)
+      - ./gridview:/app/gridview
+      - ./scripts:/app/scripts
+      # Keep data persistent but use development database
+      - gridview_dev_data:/app/data
+      - gridview_dev_logs:/app/logs
+    ports:
+      - "8088:8088"
+    command: python -m gridview.cli run --host 0.0.0.0 --port 8088 --debug
+
+volumes:
+  gridview_dev_data:
+    driver: local
+  gridview_dev_logs:
+    driver: local

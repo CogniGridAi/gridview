@@ -1,0 +1,67 @@
+# GridView Docker Environment Variables Template
+# Copy this file to .env.prod and customize for your deployment
+
+# ======================
+# SECURITY CONFIGURATION
+# ======================
+# CRITICAL: Change this to a strong random secret for production!
+SUPERSET_SECRET_KEY=your-super-secret-key-change-this-in-production
+
+# CSRF Protection (enable for production)
+WTF_CSRF_ENABLED=true
+
+# Session security (enable for HTTPS)
+SESSION_COOKIE_SECURE=false
+
+# ======================
+# DATABASE CONFIGURATION
+# ======================
+# PostgreSQL settings (for production)
+POSTGRES_DB=superset
+POSTGRES_USER=superset
+POSTGRES_PASSWORD=your-database-password-change-this
+
+# Database dialect (sqlite or postgresql)
+DATABASE_DIALECT=postgresql
+
+# ======================
+# REDIS CONFIGURATION
+# ======================
+# Enable Redis for caching and async tasks
+REDIS_AVAILABLE=true
+REDIS_HOST=redis
+REDIS_PORT=6379
+
+# ======================
+# APPLICATION SETTINGS
+# ======================
+# Environment mode
+FLASK_ENV=production
+
+# Logging level (DEBUG, INFO, WARNING, ERROR)
+LOG_LEVEL=INFO
+
+# ======================
+# NETWORK CONFIGURATION
+# ======================
+# Server name for HTTPS (optional)
+# SERVER_NAME=gridview.yourdomain.com
+
+# ======================
+# DEVELOPMENT OVERRIDES
+# ======================
+# Uncomment for development
+# FLASK_ENV=development
+# FLASK_DEBUG=1
+# LOG_LEVEL=DEBUG
+# WTF_CSRF_ENABLED=false
+# DATABASE_DIALECT=sqlite
+# REDIS_AVAILABLE=false
+
+# ======================
+# OPTIONAL FEATURES
+# ======================
+# Enable/disable specific features
+# ENABLE_THUMBNAILS=true
+# ENABLE_ALERTS=true
+# ENABLE_ASYNC_QUERIES=true

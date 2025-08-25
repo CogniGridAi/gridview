@@ -1,0 +1,94 @@
+# GridView Production Docker Compose Override
+# Use with: docker-compose -f docker-compose.yml -f docker-compose.prod.yml --profile full up
+
+version: '3.8'
+
+services:
+  gridview:
+    environment:
+      # Production database configuration
+      - DATABASE_DIALECT=postgresql
+      - DATABASE_HOST=db
+      - DATABASE_USER=${POSTGRES_USER:-superset}
+      - DATABASE_PASSWORD=${POSTGRES_PASSWORD:-superset}
+      - DATABASE_DB=${POSTGRES_DB:-superset}
+      
+      # Enable Redis for caching and async tasks
+      - REDIS_AVAILABLE=true
+      - REDIS_HOST=redis
+      
+      # Production security settings
+      - WTF_CSRF_ENABLED=true
+      - SESSION_COOKIE_SECURE=true  # Assumes HTTPS
+      - FLASK_ENV=production
+      - LOG_LEVEL=WARNING
+      
+    depends_on:
+      - db
+      - redis
+    restart: always
+
+  db:
+    # Production PostgreSQL settings
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-superset}
+      - POSTGRES_USER=${POSTGRES_USER:-superset}  
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-superset}
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    restart: always
+    # Enable performance optimizations
+    command: >
+      postgres
+      -c shared_preload_libraries=pg_stat_statements
+      -c pg_stat_statements.track=all
+      -c max_connections=200
+      -c shared_buffers=256MB
+      -c effective_cache_size=1GB
+
+  redis:
+    # Production Redis settings
+    volumes:
+      - redis_prod_data:/data
+    restart: always
+    # Enable Redis persistence and optimization
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+
+  celery-worker:
+    environment:
+      # Production worker configuration
+      - DATABASE_DIALECT=postgresql
+      - DATABASE_HOST=db
+      - DATABASE_USER=${POSTGRES_USER:-superset}
+      - DATABASE_PASSWORD=${POSTGRES_PASSWORD:-superset}
+      - DATABASE_DB=${POSTGRES_DB:-superset}
+      - REDIS_AVAILABLE=true
+      - REDIS_HOST=redis
+      - FLASK_ENV=production
+    restart: always
+    # Scale workers for production
+    deploy:
+      replicas: 2
+
+  celery-beat:
+    environment:
+      # Production scheduler configuration  
+      - DATABASE_DIALECT=postgresql
+      - DATABASE_HOST=db
+      - DATABASE_USER=${POSTGRES_USER:-superset}
+      - DATABASE_PASSWORD=${POSTGRES_PASSWORD:-superset}
+      - DATABASE_DB=${POSTGRES_DB:-superset}
+      - REDIS_AVAILABLE=true
+      - REDIS_HOST=redis
+      - FLASK_ENV=production
+    restart: always
+
+volumes:
+  postgres_prod_data:
+    driver: local
+  redis_prod_data:
+    driver: local
