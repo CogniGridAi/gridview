@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="150" height="40" viewBox="0 0 150 40" xmlns="http://www.w3.org/2000/svg">
+  <!-- Blue gradient background -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a5490" />
+      <stop offset="100%" style="stop-color:#4d7eb8" />
+    </linearGradient>
+    <linearGradient id="arrowGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6b93d6" />
+      <stop offset="100%" style="stop-color:#4f84c4" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Grid container -->
+  <rect x="5" y="5" width="30" height="30" rx="4" ry="4" fill="url(#bgGradient)" />
+  
+  <!-- Grid cells -->
+  <rect x="8" y="8" width="6" height="6" rx="1" fill="white" opacity="0.9" />
+  <rect x="16" y="8" width="6" height="6" rx="1" fill="white" opacity="0.9" />
+  <rect x="24" y="8" width="6" height="6" rx="1" fill="white" opacity="0.9" />
+  <rect x="8" y="16" width="6" height="6" rx="1" fill="white" opacity="0.9" />
+  <rect x="16" y="16" width="6" height="6" rx="1" fill="white" opacity="0.9" />
+  <rect x="24" y="16" width="6" height="6" rx="1" fill="white" opacity="0.7" />
+  <rect x="8" y="24" width="6" height="6" rx="1" fill="white" opacity="0.9" />
+  <rect x="16" y="24" width="6" height="6" rx="1" fill="white" opacity="0.9" />
+  <rect x="24" y="24" width="6" height="6" rx="1" fill="white" opacity="0.9" />
+  
+  <!-- Arrow pointing up-right -->
+  <path d="M 26 18 L 32 12 L 30 10 L 34 10 L 34 14 L 32 12 L 26 18 Z" fill="url(#arrowGradient)" />
+  
+  <!-- GridView text -->
+  <text x="42" y="17" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="600" fill="#1a5490">Grid</text>
+  <text x="42" y="30" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="400" fill="#4d7eb8">View</text>
+</svg>

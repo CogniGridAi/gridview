@@ -142,5 +142,45 @@ FAB_ADD_SECURITY_PERMISSION_MENU_VIEW = False
 RESULTS_BACKEND_USE_MSGPACK = False
 RESULTS_BACKEND = None  # Use default cache backend
 
+# ------------------------------
+# GRIDVIEW BRANDING CONFIGURATION
+# ------------------------------
+
+# Application name and branding
+APP_NAME = "GridView"
+APP_ICON = "/gridview/static/images/gridview-logo-horiz.svg"
+APP_ICON_WIDTH = 150  # Adjust based on logo dimensions
+
+# Logo configuration
+LOGO_TARGET_PATH = None  # Uses default welcome page
+LOGO_TOOLTIP = "GridView - Enhanced Analytics Platform"
+LOGO_RIGHT_TEXT = ""
+
+# Favicons
+FAVICONS = [
+    {"href": "/gridview/static/images/gridview-favicon.png"},
+]
+
+# Theme configuration using Superset's theme system
+THEME_DEFAULT = {
+    "token": {
+        # Brand configuration (Superset-specific tokens)
+        "brandLogoUrl": "/gridview/static/images/gridview-logo-horiz.svg",
+        "brandLogoAlt": "GridView",
+        "brandLogoHeight": "30px",
+        "brandLogoMargin": "18px",
+        "brandLogoHref": "/",
+        # Keep Superset's default colors for now
+        "colorPrimary": "#2893B3",
+        "colorSuccess": "#5ac189",
+        "colorWarning": "#fcc700",
+        "colorError": "#e04355",
+        "fontFamily": "'Inter', Helvetica, Arial",
+    }
+}
+
+# Custom CSS for additional branding (optional for future use)
+CUSTOM_CSS_FILE = None  # Can be set to "/gridview/static/css/gridview-branding.css" later
+
 # Logging - use default Superset logging configuration
 # LOGGING_CONFIGURATOR = DefaultLoggingConfigurator  # Commented out to use default

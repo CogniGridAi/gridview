@@ -8,7 +8,7 @@ import os
 import sys
 from typing import Optional
 from pathlib import Path
-from flask import Flask
+from flask import Flask, send_from_directory
 
 
 def create_gridview_superset_app():
@@ -97,6 +97,14 @@ class GridViewApp:
                 'mode': 'direct_superset',
                 'status': 'operational'
             }
+        
+        @self.app.route('/gridview/static/<path:filename>')
+        def gridview_static(filename):
+            """Serve GridView static assets."""
+            # Get the GridView project root
+            gridview_root = Path(__file__).parent
+            static_dir = gridview_root / 'static'
+            return send_from_directory(static_dir, filename)
     
     def run(self, host: str = '0.0.0.0', port: int = 8088, debug: bool = False):
         """Run the GridView application."""
