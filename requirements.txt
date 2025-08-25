@@ -1,0 +1,22 @@
+# GridView Core Dependencies
+flask>=2.0.0
+jinja2>=3.0.0
+werkzeug>=2.0.0
+click>=8.0.0
+pyyaml>=6.0
+
+# Superset Integration Dependencies
+celery==5.5.2
+redis==4.6.0
+kombu>=5.5.2
+billiard>=4.2.1
+
+# Development Dependencies
+pytest>=6.0.0
+pytest-cov>=2.0.0
+black>=22.0.0
+flake8>=4.0.0
+mypy>=0.950
+
+# Note: Additional Superset dependencies will be installed from the forked superset directory
+# via setup.py install_requires
